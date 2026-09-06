@@ -168,12 +168,18 @@ def _extract_from_html(html: str, game_name: str, is_time: bool) -> tuple[Option
 
         return score, avg, number
 
-    # No chiclets — check for a loss ("Practice makes perfect!" headline)
+    # No golden chiclet with an average was found. For a non-time game (Pinpoint)
+    # on a rendered results page (_fetch_game already confirmed we're on /results/,
+    # so the game IS played), that means a loss: a win shows a golden chiclet with
+    # "Solved in N", a loss shows only a headline. Keyed on page structure, not a
+    # specific phrase — LinkedIn has changed the loss headline before ("Practice
+    # makes perfect!" -> "You'll get it tomorrow!"). A loss is recorded as "X"
+    # (distinct from a win on the 5th guess, "5") and has no average.
     if not is_time:
         headline = soup.select_one(".pr-top__headline")
-        if headline and re.search(r"practice makes perfect", headline.get_text(), re.IGNORECASE):
-            logger.info(f"{game_name}: loss detected (no correct answer found in 5 guesses)")
-            return "5", None, number
+        if headline and headline.get_text(strip=True):
+            logger.info(f"{game_name}: loss detected (headline: {headline.get_text(strip=True)!r}).")
+            return "X", None, number
 
     return None, None, number
 
