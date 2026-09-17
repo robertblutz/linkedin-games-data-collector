@@ -374,6 +374,13 @@ def fetch_final_averages(
             result = _fetch_game(page, game, debug_dir=debug_dir, game_urn=game_urn)
             fetches_done += 1
 
+            # The puzzle number *displayed* on a past-puzzle results page is
+            # unreliable (see _finalize_mismatch_reason) — it can reflect
+            # today's puzzle rather than the requested past one. The number we
+            # asked for via the gameUrn is authoritative, so use that instead
+            # of whatever _fetch_game parsed off the page.
+            result.number = number
+
             # Sanity-check the loaded page against the recorded (immutable) score
             # before accepting its average — otherwise a mis-served page would
             # write a wrong average against this historical date. The displayed
